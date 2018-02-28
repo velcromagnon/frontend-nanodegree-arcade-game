@@ -109,7 +109,7 @@ let Engine = (function(global) {
   {
     if (player.y === 0) {
       player.x = 2;
-      player.y = 4;
+      player.y = 5;
       let mode = getLocalStorage('gameMode', 'standard');
       if (mode === 'standard') {
         let wins = parseInt(getLocalStorage('wins', 0)); // Only applies in standard mode to unlock things.
