@@ -1,13 +1,120 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Effective JavaScript: Frogger</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <title>Effective JavaScript: Frogger</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <script src="js/resources.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/engine.js"></script>
+  <div class="container">
+    <!-- Modal for help screen-->
+    <div class="modal fade help-screen" id="help-modal" role="dialog">
+      <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content help-screen-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Frogger Help</h4>
+          </div>
+          <div class="modal-body">
+            <p>The objective of this game is to move your player up the screen to reach
+                 the water without being struck by one of the enemies (bugs). You gain an increasing score each level but your enemies become more difficult as well.
+                 You may unlock various upgrades, and gain points and health from powerups as well.
+            <p><span class="keystroke">← → ↑ ↓</span> Move player<p>
+            <p><span class="keystroke">M</span> Change game mode (unlocks at 25 wins in standard mode)</p>
+            <p><span class="keystroke">C</span> Swap character (unlocked at level 5)</p>
+            <p><span class="keystroke">P</span> Turn on powerups (unlocked at level 10)</p>
+            <p><span class="keystroke">R</span> Reset ALL statistics</p>
+            <p><span class="keystroke">S</span> Show stats screen</p>
+            <p><span class="keystroke">H or ?</span> Show help</p>
+            <p><span class="keystroke">G</span> God mode</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default btn-color" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+  <!-- Modal for stats screen-->
+    <div class="modal fade help-screen" id="stats-modal" role="dialog">
+      <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content help-screen-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Statistics</h4>
+          </div>
+          <div class="modal-body">
+            <p>Games won in standard mode: <span class="games-won"></span></p>
+            <p>Highest score: <span class="highest-score"></span><p>
+            <p>Highest level reached: <span class="highest-level"></span></p>
+            <p>Scoring mode unlocked: <span class="scoring-mode-unlocked"></span></p>
+            <p>Characters unlocked: <span class="chars-unlocked"></span></p>
+            <p>Powerups unlocked: <span class="powerups-unlocked"></span></p>
+            <p>Powerups selected: <span class="powerups-chosen"></span></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default btn-color" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+  <!-- Modal for reset screen-->
+    <div class="modal fade help-screen" id="reset-modal" role="dialog">
+      <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content help-screen-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Statistics</h4>
+          </div>
+          <div class="modal-body">
+            <p><h1>Are you sure you want reset all statistics?</h1></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default btn-color" onclick="clearStorage();" data-dismiss="modal">RESET</button>
+            <button type="button" class="btn btn-default btn-color" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+  <!-- Modal for reset screen-->
+    <div class="modal fade help-screen" id="end-game-modal" role="dialog">
+      <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content help-screen-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Thanks for playing</h4>
+          </div>
+          <div class="modal-body">
+            <p><h1>Game Over</h1></p>
+            <p>You have reached level <span class="level-reached"></span><p>
+            <p>Your score was <span class="score"></span></p>
+            <p>Your highest score <span class="highest-score"></span></p>
+            <p><span class="high-score-message"></span><p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default btn-color" data-dismiss="modal">Play Again?</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/resources.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/engine.js"></script>
+
 </body>
 </html>

@@ -1,6 +1,34 @@
 frontend-nanodegree-arcade-game
 ===============================
 
-Students should use this [rubric](https://review.udacity.com/#!/projects/2696458597/rubric) for self-checking their submission. Make sure the functions you write are **object-oriented** - either class functions (like Player and Enemy) or class prototype functions such as Enemy.prototype.checkCollisions, and that the keyword 'this' is used appropriately within your class and class prototype functions to refer to the object the function is called upon. Also be sure that the **readme.md** file is updated with your instructions on both how to 1. Run and 2. Play your arcade game.
+# Frogger Clone
 
-For detailed instructions on how to get started, check out this [guide](https://docs.google.com/document/d/1v01aScPjSWCCWQLIpFqvg3-vXLH2e8_SZQKC8jNO0Dc/pub?embedded=true).
+## Table of Contents
+
+* [Setup](#setup)
+* [Background](#background)
+* [Instructions](#instructions)
+* [Standard Mode](#standard)
+* [Scoring Mode](#scoring)
+
+## Setup
+In order to set up the game, please either clone this repository or copy all of the files to a local location. Then simply open index.html and the game will start.
+
+## Background
+This game is derived from an old arcade game called Frogger.
+
+## Instructions
+
+Your objective is to move your character up the screen to the water without being hit by the enemies. There are two game modes, standard and scoring.
+Pressing H or ? will give you help on all key commands in the game.
+
+## Standard
+Once you reach the top, you have won the game, and if any enemy hits you, you have lost. A count
+of the number of times you have won is shown at the bottom of the screen.
+
+## Scoring
+In this mode, you start with three lives, and your object is to score the most points possible.
+This mode is unlocked by winning 25 times in standard mode.
+Along the way, you may encounter boulders that are impassable, and powerups that give you either
+additional points or health. At each level, the enemies may become faster and more numerous, and
+less predictable as well.

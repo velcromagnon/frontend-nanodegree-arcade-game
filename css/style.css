@@ -1,3 +1,21 @@
 body {
-    text-align: center;
+  text-align: center;
+}
+
+.keystroke {
+  font-size: 30px;
+  color: red;
+}
+
+.help-screen {
+  background-color: aliceblue;
+}
+
+.help-screen-content {
+  background-color: lightyellow;
+}
+
+.btn-color {
+  background-color: #08f;
+  color: white;
 }
