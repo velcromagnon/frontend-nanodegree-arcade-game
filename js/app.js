@@ -278,15 +278,23 @@ class Statistics {
   writeUnlockMessage() {
     ctx.font = "30px Arial";
     ctx.fillStyle = 'rgba(255, 255, 255, ' + this.displayOpacity + ')';
-    ctx.fillText(this.displayMessage, 15, 6 * TILE_HEIGHT - 7);
+    ctx.fillText(this.displayMessage, this.getXLocation(this.displayMessage, 3), 5 * TILE_HEIGHT + 15);
   }
 
   // Write number of wins in standard mode.
   writeWins() {
     ctx.font = "30px Arial";
-    const wins = getLocalStorage('wins', 0);
+    const wins = getLocalStorage('wins', '0');
     ctx.fillStyle = 'white';
-    ctx.fillText(`Wins:   ${wins}`, 15, 7 * TILE_HEIGHT - 7);
+    ctx.fillText('Wins', this.getXLocation('Wins', 1), 7 * TILE_HEIGHT - 7);
+    ctx.fillText(wins, this.getXLocation(wins, 2), 7 * TILE_HEIGHT - 7);
+  }
+
+  // Determine a starting location to display the string so it's centered on a tile.
+  // Starts with tile 1
+  getXLocation(str, tile) {
+    const width = ctx.measureText(str).width;
+    return TILE_WIDTH * (tile - 0.5) - width / 2.0;
   }
 
   // Write score, hearts, and level in scoring mode.
@@ -294,14 +302,22 @@ class Statistics {
     ctx.font = "25px Arial";
     // Level and Score
     ctx.fillStyle = 'white';
-    ctx.fillText(`Score: ${scores.score}`, 15, 7 * TILE_HEIGHT - 7);
-    ctx.fillText(`Level:  ${scores.level}`, TILE_WIDTH * 3 + 15 , 7 * TILE_HEIGHT - 7);
+    // Score first.
+    ctx.fillText('Score', this.getXLocation('Score', 1), 7 * TILE_HEIGHT - 7);
+    ctx.fillText(`${scores.score}`, this.getXLocation(scores.score.toString(), 2), 7 * TILE_HEIGHT - 7);
+    // Level next
+    ctx.fillText('Level', this.getXLocation('Level', 4), 7 * TILE_HEIGHT - 7);
+    ctx.fillText(`${scores.level}`, this.getXLocation(scores.level.toString(), 5), 7 * TILE_HEIGHT - 7);
+    // Now display the heart
     ctx.fillStyle = 'red';
     const heartChar = '❤';
-    const heartWidth = ctx.measureText(heartChar).width;
-    ctx.fillText(heartChar, TILE_WIDTH * 2 + 15, 7 * TILE_HEIGHT - 7);
+    // Need to get centered location for the entire message.
+    const startHeartX = this.getXLocation(`${heartChar}x${scores.hearts}`, 3);
+    ctx.fillText(heartChar, startHeartX, 7 * TILE_HEIGHT - 7);
     ctx.fillStyle = 'white';
-    ctx.fillText(`x${scores.hearts}`, TILE_WIDTH * 2 + 15 + heartWidth, 7 * TILE_HEIGHT - 7);
+    // But have to offset the rest of the message by the heart width to get different colors.
+    const heartWidth = ctx.measureText(heartChar).width;
+    ctx.fillText(`x${scores.hearts}`, startHeartX +heartWidth, 7 * TILE_HEIGHT - 7);
   }
 }
 
