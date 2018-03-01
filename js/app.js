@@ -74,16 +74,18 @@ Enemy.prototype.update = function(dt) {
     this.y = vert * 85 - 30;
     let whichWay = 'right';
     if (directions === 2 && Math.floor(Math.random() * 2) === 0)
-        whichWay = 'left';
+      whichWay = 'left';
 
     // Enemies start from either side at a high enough level.
     if (whichWay === 'right') {
       this.x = -105;
       this.speed = Math.random() * (ENEMY_SPEED_RANGE + scores.level * 5) + BASE_ENEMY_SPEED;
+      this.sprite = 'images/enemy-bug.png';
     }
     else {
       this.x = 105 * 5;
       this.speed = -1 * (Math.random() * (ENEMY_SPEED_RANGE + scores.level * 5) + BASE_ENEMY_SPEED);
+      this.sprite = 'images/enemy-bug-facing-left.png';
     }
   }
   // Save collision status
@@ -337,8 +339,6 @@ let gameReset = function() {
   for (let i = 0; i < numStartingEnemies; i++)
     allEnemies.push(new Enemy());
 };
-
-
 
 // Handle inputs for player movement, rocks, and powerups.
 Player.prototype.handleInput = function(key) {
