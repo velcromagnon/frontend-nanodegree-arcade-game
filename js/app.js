@@ -7,6 +7,9 @@ const ENEMY_SPEED_RANGE = 300;
 const WINS_TO_UNLOCK_MODE = 25;
 const LEVEL_TO_UNLOCK_CHARS = 5;
 const LEVEL_TO_UNLOCK_POWERUPS = 10;
+// constants for tile sizes and entity placement.
+const TILE_WIDTH = 101;
+const TILE_HEIGHT = 83;
 // Advanced enemies
 let directions = 1;
 let requestReset = false; // Reset from modal dialog.
@@ -45,15 +48,15 @@ PowerUp.prototype.update = function(dt) {
 
 // Powerups do not move.
 PowerUp.prototype.render = function() {
-  ctx.drawImage(Resources.get(this.sprite), this.x * 101, this.y * 83 - 15);
+  ctx.drawImage(Resources.get(this.sprite), this.x * TILE_WIDTH, this.y * TILE_HEIGHT - 15);
 };
 
 // Enemies our player must avoid
 const Enemy = function() {
   // Use the provided bug for an enemy.
   let vert = 1 + Math.floor(Math.random() * 3);
-  let y = vert * 85 - 30;
-  let x = Math.random() * (105*5);
+  let y = vert * TILE_HEIGHT - 24;
+  let x = Math.random() * (TILE_WIDTH * 5);
   let speed = Math.random() * (ENEMY_SPEED_RANGE + scores.level * 5) + BASE_ENEMY_SPEED;
   ScreenEntity.call(this, x, y);
   this.speed = speed;
@@ -68,22 +71,22 @@ Enemy.constructor = Enemy.prototype;
 Enemy.prototype.update = function(dt) {
   this.x += dt * this.speed;
   let createNewEnemy = false;
-  if (this.x > 105 * 5 && this.speed > 0 ||
+  if (this.x > TILE_WIDTH * 5 && this.speed > 0 ||
       this.x < 0 && this.speed < 0) {
     let vert = 1 + Math.floor(Math.random() * 3);
-    this.y = vert * 85 - 30;
+    this.y = vert * TILE_HEIGHT - 24;
     let whichWay = 'right';
     if (directions === 2 && Math.floor(Math.random() * 2) === 0)
       whichWay = 'left';
 
     // Enemies start from either side at a high enough level.
     if (whichWay === 'right') {
-      this.x = -105;
+      this.x = -TILE_WIDTH;
       this.speed = Math.random() * (ENEMY_SPEED_RANGE + scores.level * 5) + BASE_ENEMY_SPEED;
       this.sprite = 'images/enemy-bug.png';
     }
     else {
-      this.x = 105 * 5;
+      this.x = TILE_WIDTH * 5;
       this.speed = -1 * (Math.random() * (ENEMY_SPEED_RANGE + scores.level * 5) + BASE_ENEMY_SPEED);
       this.sprite = 'images/enemy-bug-facing-left.png';
     }
@@ -98,8 +101,8 @@ Enemy.prototype.update = function(dt) {
 // Determine if enemy collided with player.
 Enemy.prototype.checkCollision = function(player) {
   const delta = 50;
-  let pixelsY = player.y * 85 - 30;
-  let pixelsX = player.x * 105;
+  let pixelsY = player.y * TILE_HEIGHT - 30;
+  let pixelsX = player.x * TILE_WIDTH;
   let collision = (Math.abs(this.y - pixelsY) < 10 &&
                    Math.abs(this.x - pixelsX) < delta);
   return collision;
@@ -148,12 +151,12 @@ Player.prototype.render = function() {
   this.sprite = playerCharacters[this.char];
   if (this.state === 'alive') {
     if (this.godMode === false)
-      ctx.drawImage(Resources.get(this.sprite), this.x * 101, this.y * 83 - 15);
+      ctx.drawImage(Resources.get(this.sprite), this.x * TILE_WIDTH, this.y * TILE_HEIGHT - 15);
     else
-      ctx.drawImage(Resources.get(this.sprite.replace('.png', '-inverted.png')), this.x * 101, this.y * 83 - 15);
+      ctx.drawImage(Resources.get(this.sprite.replace('.png', '-inverted.png')), this.x * TILE_WIDTH, this.y * TILE_HEIGHT - 15);
   }
   else if (Math.floor(Math.sqrt(300 * this.deathTimer) % 2) === 0)
-    ctx.drawImage(Resources.get(this.sprite), this.x * 101, this.y * 83 - 15);
+    ctx.drawImage(Resources.get(this.sprite), this.x * TILE_WIDTH, this.y * TILE_HEIGHT - 15);
   // Draw score
   const mode = getLocalStorage('gameMode', 'standard');
   if (mode === 'standard') // show wins at bottom, nothing else is relevant.
@@ -167,9 +170,9 @@ Player.prototype.render = function() {
 // Check player for win condition.
 Player.prototype.checkWin = function() {
   // Check if the player has crossed the screen, and update game state accordingly.
-  if (player.y === 0) {
-    player.x = 2;
-    player.y = 5;
+  if (this.y === 0) {
+    this.x = 2;
+    this.y = 5;
     let mode = getLocalStorage('gameMode', 'standard');
     if (mode === 'standard') {
       let wins = parseInt(getLocalStorage('wins', 0)); // Only applies in standard mode to unlock things.
@@ -254,7 +257,7 @@ Player.prototype.checkWin = function() {
           allPowerups.push(new PowerUp(x, y, powerupList[type], powerupScore[type]));
         }
       }
-      if (scores.level >= 20) { // 10% chance of adding a new enemy.
+      if (scores.level >= 20) { // 5% chance of adding a new enemy.
         if (Math.floor(Math.random() * 20) === 0)
           allEnemies.push(new Enemy());
       }
@@ -275,7 +278,7 @@ class Statistics {
   writeUnlockMessage() {
     ctx.font = "30px Arial";
     ctx.fillStyle = 'rgba(255, 255, 255, ' + this.displayOpacity + ')';
-    ctx.fillText(this.displayMessage, 15, 6 * 83 - 7);
+    ctx.fillText(this.displayMessage, 15, 6 * TILE_HEIGHT - 7);
   }
 
   // Write number of wins in standard mode.
@@ -283,7 +286,7 @@ class Statistics {
     ctx.font = "30px Arial";
     const wins = getLocalStorage('wins', 0);
     ctx.fillStyle = 'white';
-    ctx.fillText(`Wins:   ${wins}`, 15, 7 * 83 - 7);
+    ctx.fillText(`Wins:   ${wins}`, 15, 7 * TILE_HEIGHT - 7);
   }
 
   // Write score, hearts, and level in scoring mode.
@@ -291,14 +294,14 @@ class Statistics {
     ctx.font = "25px Arial";
     // Level and Score
     ctx.fillStyle = 'white';
-    ctx.fillText(`Score: ${scores.score}`, 15, 7 * 83 - 7);
-    ctx.fillText(`Level:  ${scores.level}`, 101 * 3 + 15 , 7 * 83 - 7);
+    ctx.fillText(`Score: ${scores.score}`, 15, 7 * TILE_HEIGHT - 7);
+    ctx.fillText(`Level:  ${scores.level}`, TILE_WIDTH * 3 + 15 , 7 * TILE_HEIGHT - 7);
     ctx.fillStyle = 'red';
     const heartChar = '❤';
     const heartWidth = ctx.measureText(heartChar).width;
-    ctx.fillText(heartChar, 101 * 2 + 15, 7 * 83 - 7);
+    ctx.fillText(heartChar, TILE_WIDTH * 2 + 15, 7 * TILE_HEIGHT - 7);
     ctx.fillStyle = 'white';
-    ctx.fillText(`x${scores.hearts}`, 101 * 2 + 15 + heartWidth, 7 * 83 - 7);
+    ctx.fillText(`x${scores.hearts}`, TILE_WIDTH * 2 + 15 + heartWidth, 7 * TILE_HEIGHT - 7);
   }
 }
 
