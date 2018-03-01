@@ -2,6 +2,7 @@ body {
   text-align: center;
 }
 
+/* Styles for modal windows. */
 .keystroke {
   font-size: 30px;
   color: red;
