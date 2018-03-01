@@ -14,6 +14,8 @@ frontend-nanodegree-arcade-game
 ## Setup
 In order to set up the game, please either clone this repository or copy all of the files to a local location. Then simply open index.html and the game will start.
 
+You may also run the game without having to download anything [here](https://velcromagnon.github.io/frontend-nanodegree-arcade-game/)
+
 ## Background
 This game is derived from an old arcade game called Frogger.
 

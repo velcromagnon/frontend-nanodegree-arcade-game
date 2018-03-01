@@ -1,15 +1,18 @@
-let baseEnemySpeed = 100;
-let enemySpeedRange = 300;
-// Scoring
-let level = 1;
-let score = 0;
-let hearts = 3;
+'use strict';
+
+// Game constants
+const BASE_ENEMY_SPEED = 100;
+const ENEMY_SPEED_RANGE = 300;
+// unlocking features constants.
+const WINS_TO_UNLOCK_MODE = 25;
+const LEVEL_TO_UNLOCK_CHARS = 5;
+const LEVEL_TO_UNLOCK_POWERUPS = 10;
 // Advanced enemies
 let directions = 1;
 let requestReset = false; // Reset from modal dialog.
-// Show the user when they have unlocked game features.
-let displayOpacity = 0.0;
-let displayMessage = '';
+// Power up scores and types
+const powerupList = ['heart', 'GemBlue', 'GemGreen', 'GemOrange'];
+const powerupScore = [0, 300, 500, 1000];
 
 // list of all powerups (plus a rock)
 let powerupIcons = {'rock': 'images/Rock.png',
@@ -19,39 +22,46 @@ let powerupIcons = {'rock': 'images/Rock.png',
                     'GemOrange': 'images/Gem Orange.png'
                    };
 
-// Includes rocks for simplicity.
-let PowerUp = function(x, y, type, score)
-{
+// Base class that just stores locations. Not adding update or render since there
+// is no commonality.
+const ScreenEntity = function(x, y) {
   this.x = x;
   this.y = y;
+};
+
+// Includes rocks for simplicity.
+const PowerUp = function(x, y, type, score) {
+  ScreenEntity.call(this, x, y);
   this.type = type;
   this.score = score;
   this.sprite = powerupIcons[type];
 };
+PowerUp.prototype = Object.create(ScreenEntity.prototype);
+PowerUp.constructor = PowerUp.prototype;
 
 PowerUp.prototype.update = function(dt) {
   // no op
 };
 
 // Powerups do not move.
-PowerUp.prototype.render = function()
-{
+PowerUp.prototype.render = function() {
   ctx.drawImage(Resources.get(this.sprite), this.x * 101, this.y * 83 - 15);
 };
 
 // Enemies our player must avoid
-let Enemy = function(x, y, speed) {
-  // Variables applied to each of our instances go here,
-  // we've provided one for you to get started
-  this.x = x;
-  this.y = y;
+const Enemy = function() {
+  // Use the provided bug for an enemy.
+  let vert = 1 + Math.floor(Math.random() * 3);
+  let y = vert * 85 - 30;
+  let x = Math.random() * (105*5);
+  let speed = Math.random() * (ENEMY_SPEED_RANGE + scores.level * 5) + BASE_ENEMY_SPEED;
+  ScreenEntity.call(this, x, y);
   this.speed = speed;
   this.collision = false;
-
-  // The image/sprite for our enemies, this uses
-  // a helper we've provided to easily load images
   this.sprite = 'images/enemy-bug.png';
 };
+Enemy.prototype = Object.create(ScreenEntity.prototype);
+Enemy.constructor = Enemy.prototype;
 
 // Update the enemy's position, required method for game
 // Parameter: dt, a time delta between ticks
@@ -63,29 +73,34 @@ Enemy.prototype.update = function(dt) {
     let vert = 1 + Math.floor(Math.random() * 3);
     this.y = vert * 85 - 30;
     let whichWay = 'right';
-    if (directions === 2 && Math.floor(Math.random() * 2) == 0)
+    if (directions === 2 && Math.floor(Math.random() * 2) === 0)
         whichWay = 'left';
 
     // Enemies start from either side at a high enough level.
     if (whichWay === 'right') {
       this.x = -105;
-      this.speed = Math.random() * (enemySpeedRange + level * 5) + baseEnemySpeed;
+      this.speed = Math.random() * (ENEMY_SPEED_RANGE + scores.level * 5) + BASE_ENEMY_SPEED;
     }
-    else
-    {
+    else {
       this.x = 105 * 5;
-      this.speed = -1 * (Math.random() * (enemySpeedRange + level * 5) + baseEnemySpeed);
+      this.speed = -1 * (Math.random() * (ENEMY_SPEED_RANGE + scores.level * 5) + BASE_ENEMY_SPEED);
     }
   }
-  // See if this enemy collided with a player.
-  let delta = 50; // Mostly for the x value, if the current value is within this range.
-  let pixelsY = player.y * 85 - 30;
-  let pixelsX = player.x * 105;
-  this.collision = (Math.abs(this.y - pixelsY) < 10 &&
-               Math.abs(this.x - pixelsX) < delta);
+  // Save collision status
+  this.collision = this.checkCollision(player);
   // You should multiply any movement by the dt parameter
   // which will ensure the game runs at the same speed for
   // all computers.
+};
+
+// Determine if enemy collided with player.
+Enemy.prototype.checkCollision = function(player) {
+  const delta = 50;
+  let pixelsY = player.y * 85 - 30;
+  let pixelsX = player.x * 105;
+  let collision = (Math.abs(this.y - pixelsY) < 10 &&
+                   Math.abs(this.x - pixelsX) < delta);
+  return collision;
 };
 
 // Draw the enemy on the screen, required method for game
@@ -98,14 +113,13 @@ Enemy.prototype.render = function() {
 // a handleInput() method.
 
 // All characters the players can choose from.
-let playerCharacters = ['images/char-boy.png', 'images/char-cat-girl.png',
+const playerCharacters = ['images/char-boy.png', 'images/char-cat-girl.png',
                         'images/char-horn-girl.png', 'images/char-pink-girl.png',
                         'images/char-princess-girl.png'];
 
 // Player class
-let Player = function(x, y, char) {
-  this.x = x;
-  this.y = y;
+const Player = function(x, y, char) {
+  ScreenEntity.call(this, x, y);
   this.char = char;
   this.state = 'alive';
   this.godMode = false;
@@ -113,6 +127,8 @@ let Player = function(x, y, char) {
   this.display = true;
   this.deathTimer = 0;
 };
+Player.prototype = Object.create(ScreenEntity.prototype);
+Player.constructor = Player.prototype;
 
 // Update player. In this case, the character comes back to life after 3 seconds.
 Player.prototype.update = function(dt) {
@@ -121,63 +137,208 @@ Player.prototype.update = function(dt) {
     if (this.deathTimer <= 0)
       this.state = 'alive';
   }
-  if (displayOpacity > 0)
-    displayOpacity -= 0.2 * dt;
+  if (stats.displayOpacity > 0)
+    stats.displayOpacity -= 0.2 * dt;
 };
 
 // Render the player and score information (score information could be its own class)
 Player.prototype.render = function() {
   this.sprite = playerCharacters[this.char];
   if (this.state === 'alive') {
-    if (player.godMode == false)
+    if (this.godMode === false)
       ctx.drawImage(Resources.get(this.sprite), this.x * 101, this.y * 83 - 15);
     else
       ctx.drawImage(Resources.get(this.sprite.replace('.png', '-inverted.png')), this.x * 101, this.y * 83 - 15);
   }
   else if (Math.floor(Math.sqrt(300 * this.deathTimer) % 2) === 0)
-  {
     ctx.drawImage(Resources.get(this.sprite), this.x * 101, this.y * 83 - 15);
-  }
   // Draw score
-  mode = getLocalStorage('gameMode', 'standard');
+  const mode = getLocalStorage('gameMode', 'standard');
   if (mode === 'standard') // show wins at bottom, nothing else is relevant.
-    writeWins(ctx);
+    stats.writeWins(ctx);
   else
-    writeScore(ctx);
-  if (displayOpacity > 0.0)
-    writeUnlockMessage(displayMessage);
+    stats.writeScore(ctx);
+  if (stats.displayOpacity > 0.0)
+    stats.writeUnlockMessage();
 };
 
-// Write number of wins in standard mode.
-function writeUnlockMessage(message) {
-  ctx.font = "30px Arial";
-  wins = getLocalStorage('wins', 0);
-  ctx.fillStyle = 'rgba(255, 255, 255, ' + displayOpacity + ')'
-  ctx.fillText(message, 15, 6 * 83 - 7);
+// Check player for win condition.
+Player.prototype.checkWin = function() {
+  // Check if the player has crossed the screen, and update game state accordingly.
+  if (player.y === 0) {
+    player.x = 2;
+    player.y = 5;
+    let mode = getLocalStorage('gameMode', 'standard');
+    if (mode === 'standard') {
+      let wins = parseInt(getLocalStorage('wins', 0)); // Only applies in standard mode to unlock things.
+      localStorage.setItem('wins', wins + 1);
+      if (wins + 1 === WINS_TO_UNLOCK_MODE) {
+        if (getLocalStorage('scoringModeUnlocked', '0') === '0') {
+          localStorage.setItem('scoringModeUnlocked', 1);
+          stats.displayMessage = 'Unlocked scoring mode!';
+          stats.displayOpacity = 1.0;
+        }
+      }
+    }
+    // Scoring mode.
+    else {
+      scores.wonLevel();
+      let highestLevel = getLocalStorage('highestLevelReached', '0');
+      if (scores.level > parseInt(highestLevel))
+        localStorage.setItem('highestLevel', scores.level);
+      if (scores.level === LEVEL_TO_UNLOCK_CHARS) {
+        if (getLocalStorage('charsUnlocked', '0') === '0') {
+          localStorage.setItem('charsUnlocked', '1');
+          stats.displayMessage = 'Unlocked new characters!';
+          stats.displayOpacity = 1.0;
+        }
+      }
+      else if (scores.level === LEVEL_TO_UNLOCK_POWERUPS) {
+        if (getLocalStorage('powerupsUnlocked', '0') === '0') {
+          localStorage.setItem('powerupsUnlocked', '1');
+          stats.displayMessage = 'Unlocked powerups!';
+          stats.displayOpacity = 1.0;
+        }
+      }
+      if (scores.level % 10 === 0) // Gain a heart every 10th level.
+        scores.hearts += 1;
+
+      // Reset rocks and powerups!
+      // Add rocks
+      allPowerups = []; // Reset every level!
+      if (scores.level > 5) { // Add 0-3 rocks
+        let rocks = Math.floor(Math.random() * 4);
+        for (let i = 0; i < rocks; i++) {
+          // Add element.
+          let conflicts = false;
+          let x = 0;
+          let y = 0;
+          do {
+            x = Math.floor(Math.random() * 5);
+            y = Math.floor(Math.random() * 3 + 1);
+            conflicts = false;
+            for (let j = 0; j < allPowerups.length; j++) {
+              if (allPowerups[j].x === x &&
+                  allPowerups[j].y === y)
+                conflicts = true;
+            }
+          } while (conflicts);
+          // Must be in a new location.
+          allPowerups.push(new PowerUp(x, y, 'rock', 0));
+        }
+      }
+      let powerupsChosen = getLocalStorage('powerupsChosen', 0);
+      if (powerupsChosen === '1') {
+        // Add between 0 and 2 powerups per level, all randomly generated.
+        let powerups = Math.floor(Math.random() * 3);
+        for (let i = 0; i < powerups; i++) {
+          // Add element.
+          let conflicts = false;
+          let x = 0;
+          let y = 0;
+          do {
+            x = Math.floor(Math.random() * 5);
+            y = Math.floor(Math.random() * 3 + 1);
+            conflicts = false;
+            for (let j = 0; j < allPowerups.length; j++) {
+              if (allPowerups[j].x === x &&
+                  allPowerups[j].y === y)
+                conflicts = true;
+            }
+          } while (conflicts);
+
+          // Must be in a new location.
+          const type = Math.floor(Math.random() * 4);
+          allPowerups.push(new PowerUp(x, y, powerupList[type], powerupScore[type]));
+        }
+      }
+      if (scores.level >= 20) { // 10% chance of adding a new enemy.
+        if (Math.floor(Math.random() * 20) === 0)
+          allEnemies.push(new Enemy());
+      }
+      if (scores.level >= 40)
+        directions = 2;
+    }
+  }
+};
+
+class Statistics {
+  constructor() {
+    // Show the user when they have unlocked game features.
+    this.displayOpacity = 0.0;
+    this.displayMessage = '';
+  }
+
+  // Write number of wins in standard mode.
+  writeUnlockMessage() {
+    ctx.font = "30px Arial";
+    ctx.fillStyle = 'rgba(255, 255, 255, ' + this.displayOpacity + ')';
+    ctx.fillText(this.displayMessage, 15, 6 * 83 - 7);
+  }
+
+  // Write number of wins in standard mode.
+  writeWins() {
+    ctx.font = "30px Arial";
+    const wins = getLocalStorage('wins', 0);
+    ctx.fillStyle = 'white';
+    ctx.fillText(`Wins:   ${wins}`, 15, 7 * 83 - 7);
+  }
+
+  // Write score, hearts, and level in scoring mode.
+  writeScore() {
+    ctx.font = "25px Arial";
+    // Level and Score
+    ctx.fillStyle = 'white';
+    ctx.fillText(`Score: ${scores.score}`, 15, 7 * 83 - 7);
+    ctx.fillText(`Level:  ${scores.level}`, 101 * 3 + 15 , 7 * 83 - 7);
+    ctx.fillStyle = 'red';
+    const heartChar = '❤';
+    const heartWidth = ctx.measureText(heartChar).width;
+    ctx.fillText(heartChar, 101 * 2 + 15, 7 * 83 - 7);
+    ctx.fillStyle = 'white';
+    ctx.fillText(`x${scores.hearts}`, 101 * 2 + 15 + heartWidth, 7 * 83 - 7);
+  }
 }
 
-// Write number of wins in standard mode.
-function writeWins() {
-  ctx.font = "30px Arial";
-  wins = getLocalStorage('wins', 0);
-  ctx.fillStyle = 'white';
-  ctx.fillText(`Wins:   ${wins}`, 15, 7 * 83 - 7);
-}
+Player.prototype.handleCollisions = function() {
+  if (this.godMode) // Nothing can hurt me!
+    return;
+  let collision = false;
+  for (let i = 0; i < allEnemies.length; i++) {
+    if (allEnemies[i].collision)
+      collision = true;
+  }
+  if (collision) {
+    let mode = getLocalStorage('gameMode', 'standard');
+    this.x = 2;
+    this.y = 5;
+    this.state = 'dead';
+    this.deathTimer = 3.0;
+    // In standard mode, just reset the character position and state.
+    if (mode === 'scoring') {
+      scores.hearts -= 1;
+      if (scores.dead()) {
+        // GAME OVER, MAN!
+        modals.displayEndGame();
+        gameReset();
+      }
+      return; // You can be squished only once.
+    }
+  }
+};
 
-// Write score, hearts, and level in scoring mode.
-function writeScore() {
-  ctx.font = "25px Arial";
-  // Level and Score
-  ctx.fillStyle = 'white';
-  ctx.fillText(`Score: ${score}`, 15, 7 * 83 - 7);
-  ctx.fillText(`Level:  ${level}`, 101 * 3 + 15 , 7 * 83 - 7);
-  ctx.fillStyle = 'red';
-  const heartChar = '❤';
-  const heartWidth = ctx.measureText(heartChar).width;
-  ctx.fillText(heartChar, 101 * 2 + 15, 7 * 83 - 7);
-  ctx.fillStyle = 'white';
-  ctx.fillText(`x${hearts}`, 101 * 2 + 15 + heartWidth, 7 * 83 - 7);
-}
+let gameReset = function() {
+  scores.reset();
+  directions = 1; // Start out left to right only
+  // Reset all enemies, power ups, obstacles to base state.
+  allEnemies = [];
+  allPowerups = [];
+  let numStartingEnemies = 3;
+  for (let i = 0; i < numStartingEnemies; i++)
+    allEnemies.push(new Enemy());
+};
+
+
 
 // Handle inputs for player movement, rocks, and powerups.
 Player.prototype.handleInput = function(key) {
@@ -203,12 +364,11 @@ Player.prototype.handleInput = function(key) {
     for (let i = 0; i < allPowerups.length; i++) {
       if (allPowerups[i].type != 'rock' &&
           allPowerups[i].x === newX &&
-          allPowerups[i].y === newY)
-      {
+          allPowerups[i].y === newY) {
         if (allPowerups[i].type === 'heart')
-          hearts += 1;
+          scores.hearts += 1;
         else
-          score += allPowerups[i].score;
+          scores.score += allPowerups[i].score;
         // Remove powerup, now that it's used.
         allPowerups.splice(i, 1); // Should only be 1.
       }
@@ -217,14 +377,6 @@ Player.prototype.handleInput = function(key) {
     this.y = newY;
   }
 };
-
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
-let allEnemies = [];
-// Place the player object in a variable called player
-let player = new Player(2, 5, '0');
-// Powerups
-let allPowerups = [];
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
@@ -240,16 +392,16 @@ document.addEventListener('keyup', function(e) {
 
   // Handle other codes, don't route them to player.
   if (e.keyCode === 72 || e.keyCode === 191) // h key or ?
-    displayHelpScreen();
+    modals.displayHelpScreen();
   else if (e.keyCode === 83) // 's'
-    displayStatsScreen();
+    modals.displayStatsScreen();
   else if (e.keyCode === 82) // 'r'
-    displayResetScreen();
+    modals.displayResetScreen();
   // Toggle powerups
   else if (e.keyCode === 80) { // 'p'
-    if (localStorage["powerupsUnlocked"] === '1') {
-      powerupsValue = getLocalStorage('powerupsChosen', 0);
-      localStorage.setItem("powerupsChosen", 1 - parseInt(powerupsValue));
+    if (getLocalStorage('powerupsUnlocked', '0') === '1') {
+      const powerupsValue = getLocalStorage('powerupsChosen', '0');
+      localStorage.setItem('powerupsChosen', 1 - parseInt(powerupsValue));
     }
   }
   // Switch characters
@@ -268,12 +420,10 @@ document.addEventListener('keyup', function(e) {
   }
   // Toggle standard vs scoring mode.
   else if (e.keyCode === 77) { // 'm'
-    if (localStorage['scoringModeUnlocked'] === '1') {
+    if (getLocalStorage('scoringModeUnlocked', '0') === '1') {
       let currentMode = getLocalStorage('gameMode', 'standard');
-      level = 1;
-      score = 0;
-      hearts = 3;
-      if (mode === 'standard')
+      scores.reset();
+      if (currentMode === 'standard')
         localStorage.setItem('gameMode', 'scoring');
       else
         localStorage.setItem('gameMode', 'standard');
@@ -281,51 +431,76 @@ document.addEventListener('keyup', function(e) {
   }
 });
 
-function displayHelpScreen() {
-  $('#help-modal').modal('toggle');
-}
+// Put all modals together.
+class Modals {
+  constructor() {
+  }
 
-function displayResetScreen() {
-  $('#reset-modal').modal('toggle');
-}
+  displayHelpScreen() {
+    $('#help-modal').modal('toggle');
+  }
 
-// Update stats screen with scoring information.
-function displayStatsScreen() {
-  // Display wins
-  const wins = getLocalStorage('wins', 0);
-  $('.games-won').text(wins);
+  displayResetScreen() {
+    $('#reset-modal').modal('toggle');
+  }
 
-  const highestScore = getLocalStorage('highestScore', '0');
-  $('.highest-score').text(highestScore);
+  // Update stats screen with scoring information.
+  displayStatsScreen() {
+    // Display wins
+    const wins = getLocalStorage('wins', 0);
+    $('.games-won').text(wins);
 
-  const highestLevel = getLocalStorage('highestLevel', '0');
-  $('.highest-level').text(highestLevel);
+    const highestScore = getLocalStorage('highestScore', '0');
+    $('.highest-score').text(highestScore);
 
-  const scoringModeUnlocked = getLocalStorage('scoringModeUnlocked', '0');
-  if (scoringModeUnlocked === '0')
-    $('.scoring-mode-unlocked').text('✘');
-  else
-    $('.scoring-mode-unlocked').text('✔');
+    const highestLevel = getLocalStorage('highestLevel', '0');
+    $('.highest-level').text(highestLevel);
 
-  const charsUnlocked = getLocalStorage('charsUnlocked', '0');
-  if (charsUnlocked === '0')
-    $('.chars-unlocked').text('✘');
-  else
-    $('.chars-unlocked').text('✔');
+    const scoringModeUnlocked = getLocalStorage('scoringModeUnlocked', '0');
+    if (scoringModeUnlocked === '0')
+     $('.scoring-mode-unlocked').text('✘');
+     else
+      $('.scoring-mode-unlocked').text('✔');
 
-  const powerupsUnlocked = getLocalStorage('powerupsUnlocked', '0');
-  if (powerupsUnlocked === '0')
-    $('.powerups-unlocked').text('✘');
-  else
-    $('.powerups-unlocked').text('✔');
+    const charsUnlocked = getLocalStorage('charsUnlocked', '0');
+    if (charsUnlocked === '0')
+      $('.chars-unlocked').text('✘');
+    else
+      $('.chars-unlocked').text('✔');
 
-  const powerupsChosen = getLocalStorage('powerupsChosen', '0');
-  if (powerupsChosen === '0')
-    $('.powerups-chosen').text('✘');
-  else
-    $('.powerups-chosen').text('✔');
+    const powerupsUnlocked = getLocalStorage('powerupsUnlocked', '0');
+    if (powerupsUnlocked === '0')
+      $('.powerups-unlocked').text('✘');
+    else
+      $('.powerups-unlocked').text('✔');
 
-  $('#stats-modal').modal('toggle');
+    const powerupsChosen = getLocalStorage('powerupsChosen', '0');
+    if (powerupsChosen === '0')
+      $('.powerups-chosen').text('✘');
+    else
+      $('.powerups-chosen').text('✔');
+
+    $('#stats-modal').modal('toggle');
+  }
+
+  // Display the end of game stats in scoring mode.
+  displayEndGame() {
+    $('.level-reached').text(scores.level);
+    $('.score').text(scores.score);
+    let prevHighestScore = getLocalStorage('highestScore', '0');
+    // Just set a high score!
+    if (scores.score > parseInt(prevHighestScore)) {
+        $('.high-score-message').text(`You have beat your highest score of ${prevHighestScore}!`);
+        localStorage.setItem('highestScore', scores.score);
+        $('.highest-score').text(`was ${prevHighestScore}`);
+    }
+    else { // Didn't set a new score.
+      $('.high-score-message').text('');
+      $('.highest-score').text(`is ${prevHighestScore}`);
+    }
+
+    $('#end-game-modal').modal('toggle');
+  }
 }
 
 // Clear all data and request a reset.
@@ -337,6 +512,39 @@ function clearStorage() {
 
 // Helper function to deal with boilerplate null value/default code.
 function getLocalStorage(name, defaultValue) {
-  value = localStorage.getItem(name);
+  const value = localStorage.getItem(name);
   return value || defaultValue;
 }
+
+class Scores {
+  constructor() {
+    this.reset();
+  }
+  reset() {
+    this.level = 1;
+    this.score = 0;
+    this.hearts = 3;
+  }
+  wonLevel() {
+    this.score += 100 * this.level;
+    this.level += 1;
+  }
+  dead() {
+    return this.hearts <= 0;
+  }
+}
+
+// Now instantiate your objects.
+// Place all enemy objects in an array called allEnemies
+let allEnemies = [];
+// Place the player object in a variable called player
+let char = parseInt(getLocalStorage('charChosen', 0));
+let player = new Player(2, 5, char);
+// Powerups
+let allPowerups = [];
+// Modal helper class
+let modals = new Modals();
+// Screen statistics
+let stats = new Statistics();
+// Scoring stats
+let scores = new Scores();

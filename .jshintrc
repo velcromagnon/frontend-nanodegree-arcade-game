@@ -1,0 +1,23 @@
+{
+  "esversion": 6,
+  "globals": {
+    "$": false,
+    "player": false,
+    "ctx": false,
+    "Resources": false,
+    "localStorage": false,
+    "getLocalStorage": false,
+    "powerupList": false,
+    "powerupScore": false,
+    "requestReset": false,
+    "document": false,
+    "scores": false,
+    "stats": false,
+    "allEnemies": false,
+    "PowerUp": false,
+    "allPowerups": false,
+    "Enemy": false,
+    "newEnemy": false,
+    "gameReset": false
+  }
+}
